@@ -11,7 +11,7 @@ function runQuery(queryString="", queryFilePath='../queries/query.sl') {
 //Takes a directory name and looks for queryTemplate.sl and constraints.sl. If constraintNumber>-1, it builds a query using just that constraint
 function buildQuery(dirName="../queries", constraintNumber=-1) {
 var body = fs.readFileSync(dirName + "/queryTemplate.sl","utf8");
-body = body.split("\n#PART#");
+body = body.split("#PART#\n");
 var constraints = fs.readFileSync(dirName + "/constraints.sl","utf8"); 
 if(constraintNumber < 0) {
 	return body[0] + constraints + body[1];	

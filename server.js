@@ -9,8 +9,9 @@ var synthesizer = require('./synth/query.js');
 http.createServer(function (req, res) {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('Hello World\n');
-  var sy = (synthesizer.runQuery(__dirname+'/queries/query.sl',null));
-  console.log(sygProc.sygusToCode(sy));
+  var sy = (synthesizer.buildQuery(__dirname+'/queries'));
+  console.log(sy);
+ // console.log(sygProc.sygusToCode(sy));
   
 	
 
