@@ -1,4 +1,4 @@
-var smt_parser = require('./smt_parser.js')
+var smt_parser = require('./parsers/smt_parser.js')
 
 //integrate the sygusSolution into the oldCode
 var sygusToCode = function sygusToCode(sygusSolution) {
