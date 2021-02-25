@@ -1,4 +1,5 @@
 var smt_parser = require('./parsers/smt_parser.js')
+var repeatParser = require('./parsers/repeatParser.js');
 
 //integrate the sygusSolution into the oldCode
 var sygusToCode = function sygusToCode(sygusSolution) {
@@ -15,11 +16,15 @@ var sygusToCode = function sygusToCode(sygusSolution) {
   var newNewJsFxnBody = (smt_parser(newFxn));
   return newNewJsFxnBody;
 };
+//takes in an array, polish notation form of the sygus solution and outputs identical tree with repeat nodes
+function repeatFinder(arrSolution) {
+	return repeatParser.treeDupes(arrSolution);
+}
 
 
 
 module.exports = {
   sygusToCode: sygusToCode,
-
+  repeatFinder: repeatFinder
 }
 

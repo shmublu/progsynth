@@ -1,12 +1,18 @@
 var execSync = require('child_process').execSync, cvc4Output;
 fs = require('fs');
-function runQuery(queryString="", queryFilePath='../queries/query.sl') {
+function runQuery(queryString="", queryFilePath='./queries/query.sl') {
 	if(queryString!=="") {
-	fs.writeFile(queryFilePath, queryString);
+	fs.writeFileSync(queryFilePath, queryString, "utf8");
 	}
-	cvc4Output = execSync('doalarm () { perl -e \'alarm shift; exec @ARGV\' "$@"; }\n doalarm 8 cvc4 '+queryFilePath).toString();
-	return cvc4Output;
+	try{
+		cvc4Output = execSync('doalarm () { perl -e \'alarm shift; exec @ARGV\' "$@"; }\n doalarm 8 cvc4 '+queryFilePath).toString();
+		return cvc4Output;
 	}
+	catch(error) {
+	console.error(error);
+	return "ERROR"
+	}
+}
 
 //Takes a directory name and looks for queryTemplate.sl and constraints.sl. If constraintNumber>-1, it builds a query using just that constraint
 function buildQuery(dirName="../queries", constraintNumber=-1) {
