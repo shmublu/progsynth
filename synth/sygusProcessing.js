@@ -20,11 +20,27 @@ var sygusToCode = function sygusToCode(sygusSolution) {
 function repeatFinder(arrSolution) {
 	return repeatParser.treeDupes(arrSolution);
 }
+//takes an array of array form ASTs and test if they are the same, providing an acception for the loop repitition amount
+function areSolsIdentical(listOfTrees) {
+	return repeatParser.repeatComparer(listOfTrees);
+}
+//Takes an array of array form ASTs. If areSolsIdentical ==true, return a list of the loop repitition amounts
+//ASSERT: root node is a repeat node
+//TODO: make it work without this assertion
+function getLoopRep(listOfTrees) {
+	for(var i = 0; i < listOfTrees.length; i++) {
+		listOfTrees[i]=repeatParser.turnTreeToArray(listOfTrees[i]);
+		listOfTrees[i]=listOfTrees[i][2];
+	}
+	return listOfTrees;
+}
 
 
 
 module.exports = {
   sygusToCode: sygusToCode,
-  repeatFinder: repeatFinder
+  repeatFinder: repeatFinder,
+  areSolsIdentical: areSolsIdentical,
+  getLoopRep: getLoopRep
 }
 

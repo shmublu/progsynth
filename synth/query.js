@@ -1,5 +1,39 @@
 var execSync = require('child_process').execSync, cvc4Output;
+var sygProc = require('./sygusProcessing.js');
+var smt_parser = require('./parsers/smt_parser.js');
 fs = require('fs');
+
+function sygusQuery(dirName="../queries") {
+//first, try and run it with all the constraints.
+	var query = buildQuery(dirName);
+	var queryOutput = runQuery(query);
+//if it doesn't error, great!
+	if(Boolean(queryOutput)) {
+		return sygProc.sygusToCode(queryOutput);
+	}
+//if it does, let's try running every constraint individually.
+	else {
+		var arrayOfSols = new Array();
+		for(var i = 0; i > -1; i++) {
+			if(!!buildQuery(dirName, i)) {
+				arrayOfSols[i] = runQuery(buildQuery(dirName,i));
+				arrayOfSols[i] = sygProc.sygusToCode(arrayOfSols[i]);
+				arrayOfSols[i] = sygProc.repeatFinder(arrayOfSols[i]);
+		}
+			else {
+				break;
+			}
+		}
+		if( sygProc.areSolsIdentical(arrayOfSols)) {
+			var newConstraints= sygProc.getLoopRep(arrayOfSols);
+			return newConstraints;
+		}
+		return null;
+		
+		
+	}
+}
+
 function runQuery(queryString="", queryFilePath='./queries/query.sl') {
 	if(queryString!=="") {
 	fs.writeFileSync(queryFilePath, queryString, "utf8");
@@ -10,7 +44,7 @@ function runQuery(queryString="", queryFilePath='./queries/query.sl') {
 	}
 	catch(error) {
 	console.error(error);
-	return "ERROR"
+	return false;
 	}
 }
 
@@ -24,11 +58,17 @@ if(constraintNumber < 0) {
 }
 else {
 	constraints = constraints.split("\n");
-	return body[0] + constraints[constraintNumber] + body[1];
+	if(constraints.length-1 > constraintNumber) {
+		return body[0] + constraints[constraintNumber] + body[1];
+	}
+	else {
+		return null;
+	}
 }
 
 }
 module.exports = {
   runQuery: runQuery,
-  buildQuery: buildQuery
+  buildQuery: buildQuery,
+  sygusQuery: sygusQuery
 }

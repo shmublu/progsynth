@@ -15,5 +15,4 @@
       (str.suffixof ntString ntString)
       (str.contains ntString ntString)))))
 (declare-var s1 String)
-(constraint (= (concat "wood" ) "woodwoodwoodwood"))
-(check-synth)
+(constraint (= (concat "jacobi" ) "jacobijacobijacobijacobijacobijacobi"))(check-synth)

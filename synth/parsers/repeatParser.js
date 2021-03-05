@@ -100,6 +100,70 @@ function compareTreePerm(nodedTree, placeholderTree) {
     }
     return repeatAmount;
 }
+//takes a list of array form trees which are repeat nodes([0] is 'repeat', [1] is the loop, [2] is the first loop placeholder value; returns true if they are identical except the amount of repititions
+function repeatComparer(listOfTrees) {
+//first, convert all of them to nodedTree notation
+	for(var i = 0; i < listOfTrees.length; i++) {
+		listOfTrees[i] = turnArrayToTree(listOfTrees[i]);
+	}
+//make sure there are at least 2 trees, and then start chain comparing them
+	for(var i = 0; i < listOfTrees.length -1; i++) {
+		var nodedTree1= listOfTrees[i];
+		var nodedTree2= listOfTrees[i+1];
+		if(dTreeComparer(nodedTree1,nodedTree2)) {
+		//these trees are identical.
+		}
+		else {
+			return false;
+		}
+
+	}
+	return true;
+}
+//Compares two nodedTrees for direct equality. Placeholders have no special status.
+function dTreeComparer(tree1,tree2) {
+    if(tree1==null && tree2==null) {
+        return true;
+    }
+    else if(tree1==null || tree2==null) {
+        return false;
+    }
+    else if(!areNodesEqual(tree1,tree2)) {
+        return false;
+    }
+    else {
+        if(tree1.listOfChildren==null && tree2.listOfChildren==null) {
+            return true;
+        }
+        else if(tree1.listOfChildren==null || tree2.listOfChildren==null) {
+            return false;
+        }
+        else if(tree1.listOfChildren.length==tree2.listOfChildren.length) {
+//test if we find a repeat node, b/c that requires special testing
+		if(tree1.data==="repeat") {
+//only test the pattern[0] and it's value upon entering the loop[2]
+		    var b1 = dTreeComparer(tree1.listOfChildren[0], tree2.listOfChildren[0])
+		    var b2 = dTreeComparer(tree1.listOfChildren[2], tree2.listOfChildren[2])
+		    if(b1&&b2) {
+			return true;
+		    }
+		    return false;
+			
+		}
+//if no repeat node, we have to compare everything
+		for(var i = 0; i < tree1.listOfChildren.length; i++) {
+		    var b1 = dTreeComparer(tree1.listOfChildren[i], tree2.listOfChildren[i])
+		    if(b1==false) {
+			return false;
+		    }
+		}
+        return true;
+        }
+        return false;
+    }
+
+
+}
 //Compares two nodedTrees for equality. Placeholders are definitionally equal to any other node.
 function treeComparer(tree, placeholderTree) {
     if(tree==null && placeholderTree==null) {
@@ -360,6 +424,9 @@ function replaceGivenIndex(array, index, value) {
 
 
   module.exports = {
-	treeDupes: treeDupes
+	treeDupes: treeDupes,
+	treeComparer:treeComparer,
+	repeatComparer: repeatComparer,
+	turnTreeToArray:turnTreeToArray
 }
 
