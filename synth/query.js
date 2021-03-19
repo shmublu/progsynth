@@ -67,6 +67,19 @@ else {
 }
 
 }
+function buildConstraints(arrayOfInputs, arrayOfOutputs, functionName = "f") {
+var b = "(constraint (= (" + functionName+ " \"";
+var m = "\") \"";
+var e = "\"))\n";
+var constraints = [];
+for(var i = 0; (i < arrayOfInputs.length && i < arrayOfOutputs.length); i++) {
+	var constraint = b+ arrayOfInputs[i] +m + arrayOfOutputs[i] + e;
+	constraints.push(constraint);
+}
+return constraints;
+
+
+}
 module.exports = {
   runQuery: runQuery,
   buildQuery: buildQuery,
