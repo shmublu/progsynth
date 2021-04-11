@@ -1,3 +1,3 @@
-(constraint (= (concat "wood" ) "woodwoodwoodwood"))
-(constraint (= (concat "shoot" ) "shootshootshootshootshoot"))
-(constraint (= (concat "jacobi" ) "jacobijacobijacobijacobijacobijacobi"))
+(constraint (= (f "wood" ) "woodwoodwoodwood"))
+(constraint (= (f "shoot" ) "shootshootshootshootshoot"))
+(constraint (= (f "jacobi" ) "jacobijacobijacobijacobijacobijacobi"))

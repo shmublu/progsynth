@@ -9,7 +9,7 @@ var synthesizer = require('./synth/query.js');
 http.createServer(function (req, res) {
   res.writeHead(200, {'Content-Type': 'text/plain'});
   res.end('Hello World\n');
-  var sy = synthesizer.sygusQuery(["\"one\"", "\"si\"","\"sixth\""],["\"oneoneone\"", "\"sisi\"","\"sixthsixthsixthsixthsixth\""], __dirname+'/queries');
+  var sy = synthesizer.sygusQuery(["\"one\"", "\"fort\"","\"sixth\""],["\"oneoneone1\"", "\"fortfortfortfort1\"","\"sixthsixthsixthsixthsixth1\""], __dirname+'/queries');
   console.log(sy);
 
  // console.log(sygProc.sygusToCode(sy));*

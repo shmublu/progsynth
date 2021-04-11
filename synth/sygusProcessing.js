@@ -35,12 +35,20 @@ function getLoopRep(listOfTrees) {
 	return listOfTrees;
 }
 
+//Takes an array-form AST loop condition and an array-form AST loop. Splices the first argument into the loop condition of the repeat node.
+//ASSERT: root node of second arguement is a repeat node
+//TODO: make it work without this assertion(find repeat node, splice in)
+function injectLoopCond(loopCond, repeatAST) {
+	repeatAST[2] = loopCond;
+	return repeatAST;
+}
 
 
 module.exports = {
   sygusToCode: sygusToCode,
   repeatFinder: repeatFinder,
   areSolsIdentical: areSolsIdentical,
-  getLoopRep: getLoopRep
+  getLoopRep: getLoopRep,
+  injectLoopCond: injectLoopCond
 }
 
