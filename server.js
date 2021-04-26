@@ -5,16 +5,5 @@ const fs = require('fs');
 var synthesizer = require('./synth/query.js');
 
 
-
-http.createServer(function (req, res) {
-  res.writeHead(200, {'Content-Type': 'text/plain'});
-  res.end('Hello World\n');
-  var sy = synthesizer.sygusQuery(["\"one\"", "\"fort\"","\"sixth\""],["\"oneoneone1\"", "\"fortfortfortfort1\"","\"sixthsixthsixthsixthsixth1\""], __dirname+'/queries');
+  var sy = synthesizer.sygusQuery(["\"six\"", "\"filt\"","\"sixth\"","\"o\""],["\"\"", "\"filt\"","\"sixth\"","\"\""], __dirname+'/queries');
   console.log(sy);
-
- // console.log(sygProc.sygusToCode(sy));*
-  
-	
-
-}).listen(1337, '127.0.0.1');
-console.log('Server running at http://127.0.0.1:1337/');

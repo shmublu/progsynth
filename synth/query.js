@@ -7,21 +7,33 @@ const structuredClone = obj => {  return v8.deserialize(v8.serialize(obj
 
 function sygusQuery(inputs, outputs, dirName = "../queries") {
 //first, try and run it with all the constraints.
+	console.log("Trying to run complete query.\n");
 	var query = buildQuery(inputs, outputs, dirName);
 	var queryOutput = runQuery(query);
 //if it doesn't error, great!
 	if(Boolean(queryOutput)) {
+		console.log("Complete Query Successful\n");
 		return sygProc.sygusToCode(queryOutput);
 	}
 //if it does, let's try running every constraint individually.
-	else {
+	else {	
+		console.log("Complete Query Unsuccessful. Trying to break it down.\n");
 		var arrayOfSols = new Array();
 		var clonedArray;
 		for(var i = 0; i > -1; i++) {
+//TODO: !! remove
 			if(!!buildQuery(inputs,outputs, dirName, i)) {
 				arrayOfSols[i] = runQuery(buildQuery(inputs,outputs,dirName,i));
-				arrayOfSols[i] = sygProc.sygusToCode(arrayOfSols[i]);
-				arrayOfSols[i] = sygProc.repeatFinder(arrayOfSols[i]);
+				if(Boolean(arrayOfSols[i])) {
+					console.log("Query #"+i.toString()+" successful.\n");
+					arrayOfSols[i] = sygProc.sygusToCode(arrayOfSols[i]);
+					arrayOfSols[i] = sygProc.repeatFinder(arrayOfSols[i]);
+				}
+				else {
+					console.log("Query #"+i.toString()+" unsuccessful. Returning null.\n");
+					return null;
+				}
+
 			//	console.log(arrayOfSols[i]);
 				clonedArray = structuredClone(arrayOfSols);
 		}
@@ -29,14 +41,17 @@ function sygusQuery(inputs, outputs, dirName = "../queries") {
 				break;
 			}
 		}
+		console.log("All queries successful. Checking if solutions are identical.\n");
 		if( sygProc.areSolsIdentical(arrayOfSols)) {
-				console.log(arrayOfSols[0]);
+			console.log("Solutions are identical.\n");
 			var newConstraints= sygProc.getLoopRep(arrayOfSols);
+			//run the query using templace specified by the string, using all the constraints
 			var loopCond = runQuery(buildQuery(inputs,newConstraints,dirName,-1,"2"));
 			loopCond= sygProc.sygusToCode(loopCond);	
 			//all of the solutions are identical except the loopcond, so we pick first one
 			return sygProc.injectLoopCond(loopCond,clonedArray[0]);
 		}
+		console.log("Solutions are not identical. Returning null.\n");
 		return null;
 		
 		
@@ -48,7 +63,7 @@ function runQuery(queryString="", queryFilePath='./queries/query.sl') {
 	fs.writeFileSync(queryFilePath, queryString, "utf8");
 	}
 	try{
-		cvc4Output = execSync('doalarm () { perl -e \'alarm shift; exec @ARGV\' "$@"; }\n doalarm 3 cvc4 '+queryFilePath).toString();
+		cvc4Output = execSync('doalarm () { perl -e \'alarm shift; exec @ARGV\' "$@"; }\n doalarm 8 cvc4 '+queryFilePath).toString();
 		return cvc4Output;
 	}
 	catch(error) {
@@ -77,7 +92,7 @@ else {
 
 } */
 
-//Takes a directory name and looks for queryTemplate.sl and constraints.sl. If constraintNumber>-1, it builds a query using just that constraint
+//Takes a directory name and looks for queryTemplate.sl and constraints.sl. If constraintNumber>-1, it builds a query using just that constraint. templateNum is a string that will be appended to "queryTemplate" and it will use that file as a template for the sygus query
 function buildQuery(inputs, outputs, dirName="./queries", constraintNumber=-1, templateNum="") {
 var body = fs.readFileSync(dirName + "/queryTemplate"+templateNum+".sl","utf8");
 body = body.split("#PART#\n");
