@@ -5,11 +5,14 @@ fs = require('fs');
 const v8 = require('v8');
 const structuredClone = obj => {  return v8.deserialize(v8.serialize(obj));};
 
-function sygusQuery(inputs, outputs, dirName = "../queries") {
+function sygusQuery(inputs, outputs, dirName = "../queries", skipInitialQuery = 0 ) {
 //first, try and run it with all the constraints.
+	var queryOutput = null;
+	if(!skipInitialQuery) {
 	console.log("Trying to run complete query.\n");
 	var query = buildQuery(inputs, outputs, dirName);
-	var queryOutput = runQuery(query);
+	queryOutput = runQuery(query);
+	}
 //if it doesn't error, great!
 	if(Boolean(queryOutput)) {
 		console.log("Complete Query Successful\n");
@@ -24,6 +27,7 @@ function sygusQuery(inputs, outputs, dirName = "../queries") {
 //TODO: !! remove
 			if(!!buildQuery(inputs,outputs, dirName, i)) {
 				arrayOfSols[i] = runQuery(buildQuery(inputs,outputs,dirName,i));
+				console.log(arrayOfSols[i]);
 				if(Boolean(arrayOfSols[i])) {
 					console.log("Query #"+i.toString()+" successful.\n");
 					arrayOfSols[i] = sygProc.sygusToCode(arrayOfSols[i]);
@@ -63,7 +67,7 @@ function runQuery(queryString="", queryFilePath='./queries/query.sl') {
 	fs.writeFileSync(queryFilePath, queryString, "utf8");
 	}
 	try{
-		cvc4Output = execSync('doalarm () { perl -e \'alarm shift; exec @ARGV\' "$@"; }\n doalarm 2 cvc4 '+queryFilePath).toString();
+		cvc4Output = execSync('doalarm () { perl -e \'alarm shift; exec @ARGV\' "$@"; }\n doalarm 4 cvc4 '+queryFilePath).toString();
 		return cvc4Output;
 	}
 	catch(error) {
