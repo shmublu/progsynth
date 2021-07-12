@@ -8,7 +8,7 @@ var benchmarks = getBenchmarksFromFile("constraints.txt")
 for(var i = 0; i< benchmarks.length; i=i+2) {
 	console.time('label'+ i.toString());
 	//change last number to 1 to ignore solution with all constraints at once TODO
-	var sy = synthesizer.sygusQuery(benchmarks[i],benchmarks[i+1], __dirname+'/queries',0);
+	var sy = synthesizer.sygusQuery(benchmarks[i],benchmarks[i+1], __dirname+'/queries',1);
 	console.timeEnd('label'+i.toString());
 	console.log(sy);	
 }

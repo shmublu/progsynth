@@ -66,11 +66,14 @@ function runQuery(queryString="", queryFilePath='./queries/query.sl') {
 	if(queryString!=="") {
 	fs.writeFileSync(queryFilePath, queryString, "utf8");
 	}
-	try{
-		cvc4Output = execSync('doalarm () { perl -e \'alarm shift; exec @ARGV\' "$@"; }\n doalarm 4 cvc4 '+queryFilePath).toString();
+	try{	
+		console.time('label'+ queryString);
+		cvc4Output = execSync('doalarm () { perl -e \'alarm shift; exec @ARGV\' "$@"; }\n doalarm 8 cvc4 '+queryFilePath).toString();
+		console.timeEnd('label'+ queryString);
 		return cvc4Output;
 	}
 	catch(error) {
+	console.timeEnd('label'+ queryString);
 	console.error(error);
 	return false;
 	}
