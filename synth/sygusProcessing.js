@@ -24,12 +24,22 @@ function repeatFinder(arrSolution) {
 function areSolsIdentical(listOfTrees) {
 	return repeatParser.repeatComparer(listOfTrees);
 }
-//Takes an array of array form ASTs. If areSolsIdentical ==true, return a list of the loop repitition amounts
+//Takes an array of tree form ASTs. If areSolsIdentical ==true, return a list of the loop repitition amounts
 //ASSERT: root node is a repeat node
 //TODO: make it work without this assertion
 function getLoopRep(listOfTrees) {
 	for(var i = 0; i < listOfTrees.length; i++) {
 		listOfTrees[i]=repeatParser.turnTreeToArray(listOfTrees[i]);
+		listOfTrees[i]=listOfTrees[i][2];
+	}
+	return listOfTrees;
+}
+
+//Takes an array of array form ASTs. If areSolsIdentical ==true, return a list of the loop repitition amounts
+//ASSERT: root node is a repeat node
+//TODO: make it work without this assertion
+function getLoopRept(listOfTrees) {
+	for(var i = 0; i < listOfTrees.length; i++) {
 		listOfTrees[i]=listOfTrees[i][2];
 	}
 	return listOfTrees;
@@ -49,6 +59,7 @@ module.exports = {
   repeatFinder: repeatFinder,
   areSolsIdentical: areSolsIdentical,
   getLoopRep: getLoopRep,
+  getLoopRept: getLoopRept,
   injectLoopCond: injectLoopCond
 }
 

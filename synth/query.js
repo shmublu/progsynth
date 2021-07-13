@@ -1,6 +1,7 @@
 var execSync = require('child_process').execSync, cvc4Output;
 var sygProc = require('./sygusProcessing.js');
 var smt_parser = require('./parsers/smt_parser.js');
+var astToJS = require('./parsers/astToJS.js');
 fs = require('fs');
 const v8 = require('v8');
 const structuredClone = obj => {  return v8.deserialize(v8.serialize(obj));};
@@ -22,20 +23,62 @@ function sygusQuery(inputs, outputs, dirName = "../queries", skipInitialQuery = 
 	else {	
 		console.log("Complete Query Unsuccessful. Trying to break it down.\n");
 		var arrayOfSols = new Array();
+		var categoriesOfSols = new Array();
+		var categoriesOfInputs = new Array();
+		var updatedCategory = 0;
 		var clonedArray;
+		
 		for(var i = 0; i > -1; i++) {
 //TODO: !! remove
-			if(!!buildQuery(inputs,outputs, dirName, i)) {
-				arrayOfSols[i] = runQuery(buildQuery(inputs,outputs,dirName,i));
+			var bq;
+			if(!!(bq =buildQuery(inputs,outputs, dirName, i))) {
+				arrayOfSols[i] = runQuery(bq);
 				console.log(arrayOfSols[i]);
 				if(Boolean(arrayOfSols[i])) {
 					console.log("Query #"+i.toString()+" successful.\n");
 					arrayOfSols[i] = sygProc.sygusToCode(arrayOfSols[i]);
 					arrayOfSols[i] = sygProc.repeatFinder(arrayOfSols[i]);
+					var belongs = 0;
+					if(hasRepitition(arrayOfSols[i])) {
+						for(var j = 0; j < categoriesOfSols.length;j++) {
+						//check if this solution fits into any category
+						var testArray = [categoriesOfSols[j][0],arrayOfSols[i]];
+							if( sygProc.areSolsIdentical(testArray)) {
+								console.log("Query #" + i.toString()+" belongs to category ("+j.toString()+")");	
+								belongs=1;
+								updatedCategory=j;
+								categoriesOfSols[j].push(arrayOfSols[i]);
+								categoriesOfInputs[j].push(inputs[i]);
+							}
+						}
+						if(!belongs) {
+						//check if it has any repeats. If yes, put it in new category else throw it out
+							var testArray = [arrayOfSols[i]];
+							console.log("Query #" + i.toString()+" belongs to category ("+(categoriesOfSols.length).toString()+")");	
+							categoriesOfSols.push(testArray);
+							categoriesOfInputs.push([inputs[i]])
+							updatedCategory=(categoriesOfSols.length)-1;
+						} 				
+						//Try and synthesize the loop condition using the newly updated category
+						if(categoriesOfSols[updatedCategory].length>1) {
+							var updatedCatCopy = structuredClone(categoriesOfSols[updatedCategory]);
+							var newConstraints= sygProc.getLoopRept(updatedCatCopy);
+							console.log(categoriesOfInputs);
+							var loopCond = runQuery(buildQuery(categoriesOfInputs[updatedCategory],newConstraints,dirName,-1,"2"));
+							if(loopCond) {
+								loopCond= sygProc.sygusToCode(loopCond);
+								//all of the solutions are identical except the loopcond, so splice first
+								var splicedSolution = sygProc.injectLoopCond(loopCond,structuredClone(categoriesOfSols[updatedCategory][0]))
+								if(testOnConstraints(splicedSolution, inputs, outputs)) {
+									return splicedSolution;
+								}	
+							}
+						}
+					}
 				}
 				else {
-					console.log("Query #"+i.toString()+" unsuccessful. Returning null.\n");
-					return null;
+					//TODO: in v2, if we cannot find a solution we simply skip
+					console.log("Query #"+i.toString()+" could not be synthesized.")
 				}
 
 			//	console.log(arrayOfSols[i]);
@@ -60,6 +103,26 @@ function sygusQuery(inputs, outputs, dirName = "../queries", skipInitialQuery = 
 		
 		
 	}
+}
+//this function returns if the solution has repitition(represented by a repeat node
+//TODO: does not just check root node
+function hasRepitition(arrayAST){
+	return (arrayAST[0]==="repeat") ? true : false;
+}
+//Test the function on each constraint- return false if it fails 
+function testOnConstraints(solution, inputs, outputs) {
+	var solutionFunc =astToJS.astToJs(solution);
+	for(var i =0; i < inputs.length; i++) {
+		var testFunc = "testFunc("+inputs[i]+");\n"+ solutionFunc;
+		var answer = eval(testFunc);
+		//if answer is a string, have to put quotes around it
+		if( typeof answer == "string") {
+			answer = '\"' + answer + '\"';
+		}
+		console.log(outputs[i]);
+		if(!(answer==outputs[i])) {console.log("Constraint "+ i.toString() +" does not work."); return false;}
+	}
+	return true;
 }
 
 function runQuery(queryString="", queryFilePath='./queries/query.sl') {
