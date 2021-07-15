@@ -1,20 +1,18 @@
-console.log(getFuncName("(synth-fun f ((name String)(test String)) String"));
-console.log(getNameAndVars("(synth-fun f ((name String)(test String)) String"));
-console.log(changeReturnToInt("(synth-fun f ((name String)(test String)) String"));
-console.log(parseConstraints('f', "(constraint (= (f \"Nancy FreeHafer\") 2))\n(constraint (= (f \"Andrew Cencici\") 3))\n(constraint (= (f \"Jan Kotas\") 4))"))
-//Parses a SyGuS query by double newlines
+//Parses a SyGuS query by double newlines returns [[[inputs],[outputs]],[variableNames],nameOfFunc,logicType,funcHeader,funcHeaderInt,funcGrammar, funcGrammarInt, endOfQuery]
 function parseQuery(query) {
-	var parts = query.split("\n\n");
+	var parts = query.split('\n\n');
 	var logicType = parts[0]
 	var funcType = parts[1]
 	var grammar = parts[2]
 	var constraints = parts[3]
 	var endQuery = parts[4]
-	return parseConstraints(constraints);
+	var name = getFuncName(funcType);
+	var intGrammar = changeGrammarToInt(grammar)
+	return [parseConstraints(name,constraints), getVars(funcType), name,logicType,funcType,changeReturnToInt(funcType),grammar,intGrammar,endQuery]
 }
 
-//Returns [funcName,[input_1,input_2,...input_n]]
-function getNameAndVars(funcType) {
+//Returns [input_1,input_2,...input_n]
+function getVars(funcType) {
 	var parenCounter=0;
 	var foundSpace = 0;
 	var arrayOfInputs = new Array();
@@ -43,6 +41,17 @@ function changeReturnToInt(funcType) {
 		}
 	}	
 	return null;
+}
+//TODO: Make this func actually work instead of cheating
+//Changes the grammar from whatever it was to returning an int
+function changeGrammarToInt(grammar) {
+	lines = grammar.split('\n');
+	newGrammar=""
+	newGrammar+="    ((Start Int) (ntString String) (ntInt Int))\n     ((Start Int (ntInt))\n"
+	for(var i = 2; i < lines.length; i++) {
+		newGrammar+=lines[i]+'\n'
+	}
+	return newGrammar;
 }
 
 //Returns function name

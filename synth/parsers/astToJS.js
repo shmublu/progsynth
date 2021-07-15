@@ -1,4 +1,5 @@
 'use babel';
+//CREDIT: taken almost wholly from https://github.com/Barnard-PL-Labs/liveprogramming/blob/master/lib/javascript/parsers/astToJS.js
 
 //  To ensure presevation of presendence, sometimes we need to add parens
 //  TODO would be nice to actually track presendence of operations
@@ -30,7 +31,7 @@ function astToJsStructure(ast){
   }
   else if (ast[0] == "str.substr") {
     return astToJsStructureP(ast[1]) +
-           ".substring(" + astToJsStructure(ast[2]) + " , " + astToJsStructure(ast[3]) + "+1)";
+           ".substring(" + astToJsStructure(ast[2]) + " , " + astToJsStructure(ast[3]) + ")";
   }
   else if (ast[0] == "str.len") {
     return astToJsStructureP(ast[1]) +
@@ -68,10 +69,18 @@ function astToJsStructure(ast){
     console.error("Unhandled AST form: "+ast+" : "+(typeof ast));
   }
 };
-function astToJs(ast) {
+function astToJs(ast, arrayOfInputs=["z"]) {
+  console.log(ast);
   if(ast[0]=="repeat") {
-	var i1 = "function testFunc(z) {\n var placeholder =" +(astToJsStructureP(ast[3])).toString() + ";\nfor(var i = 0; i <" + (astToJsStructureP(ast[2])).toString() + "; i++) {\n" + "placeholder = " + (astToJsStructureP(ast[1])).toString() + ";\n}\n return placeholder;}";
+	var variables="";
+	for(var i = 0; i < arrayOfInputs.length; i++) {
+		variables+=arrayOfInputs[i] + ",";
+	}
+	var i1 = "function testFunc("+ variables + ") {\n var placeholder =" +(astToJsStructureP(ast[3])).toString() + ";\nfor(var i = 0; i <" + (astToJsStructureP(ast[2])).toString() + "; i++) {\n" + "placeholder = " + (astToJsStructureP(ast[1])).toString() + ";\n}\n return placeholder;}";
 	return i1;
+ }
+ else {
+	return "  return " + astToJsStructure(ast) + ";";
  }
 }
 module.exports= {

@@ -6,12 +6,12 @@ fs = require('fs');
 const v8 = require('v8');
 const structuredClone = obj => {  return v8.deserialize(v8.serialize(obj));};
 
-function sygusQuery(inputs, outputs, dirName = "../queries", skipInitialQuery = 0 ) {
+function sygusQuery(inputs, outputs, varNames,funcName,logicType, funcHeader,loopFuncHeader,funcGrammar,loopFuncGrammar,endOfQuery, dirName = "../queries", skipInitialQuery = 0) {
 //first, try and run it with all the constraints.
 	var queryOutput = null;
 	if(!skipInitialQuery) {
 	console.log("Trying to run complete query.\n");
-	var query = buildQuery(inputs, outputs, dirName);
+	var query = buildQuery(inputs, outputs,funcName,logicType,funcHeader,funcGrammar,endOfQuery, dirName);
 	queryOutput = runQuery(query);
 	}
 //if it doesn't error, great!
@@ -31,9 +31,8 @@ function sygusQuery(inputs, outputs, dirName = "../queries", skipInitialQuery = 
 		for(var i = 0; i > -1; i++) {
 //TODO: !! remove
 			var bq;
-			if(!!(bq =buildQuery(inputs,outputs, dirName, i))) {
+			if(!!(bq =buildQuery(inputs,outputs,funcName,logicType,funcHeader,funcGrammar,endOfQuery, dirName, i))) {
 				arrayOfSols[i] = runQuery(bq);
-				console.log(arrayOfSols[i]);
 				if(Boolean(arrayOfSols[i])) {
 					console.log("Query #"+i.toString()+" successful.\n");
 					arrayOfSols[i] = sygProc.sygusToCode(arrayOfSols[i]);
@@ -64,12 +63,13 @@ function sygusQuery(inputs, outputs, dirName = "../queries", skipInitialQuery = 
 							var updatedCatCopy = structuredClone(categoriesOfSols[updatedCategory]);
 							var newConstraints= sygProc.getLoopRept(updatedCatCopy);
 							console.log(categoriesOfInputs);
-							var loopCond = runQuery(buildQuery(categoriesOfInputs[updatedCategory],newConstraints,dirName,-1,"2"));
+							var loopCond = runQuery(buildQuery(categoriesOfInputs[updatedCategory],newConstraints,funcName,logicType,loopFuncHeader,loopFuncGrammar,endOfQuery,dirName,-1,"2"));
 							if(loopCond) {
 								loopCond= sygProc.sygusToCode(loopCond);
 								//all of the solutions are identical except the loopcond, so splice first
+								console.log(loopCond);
 								var splicedSolution = sygProc.injectLoopCond(loopCond,structuredClone(categoriesOfSols[updatedCategory][0]))
-								if(testOnConstraints(splicedSolution, inputs, outputs)) {
+								if(testOnConstraints(splicedSolution, inputs, outputs,varNames)) {
 									return splicedSolution;
 								}	
 							}
@@ -110,21 +110,31 @@ function hasRepitition(arrayAST){
 	return (arrayAST[0]==="repeat") ? true : false;
 }
 //Test the function on each constraint- return false if it fails 
-function testOnConstraints(solution, inputs, outputs) {
-	var solutionFunc =astToJS.astToJs(solution);
+function testOnConstraints(solution, inputs, outputs, varNames=['z']) {
+	var solutionFunc =astToJS.astToJs(solution,varNames);
 	for(var i =0; i < inputs.length; i++) {
-		var testFunc = "testFunc("+inputs[i]+");\n"+ solutionFunc;
+		var testFunc = "testFunc("+commaInputs(inputs[i])+");\n"+ solutionFunc;
 		var answer = eval(testFunc);
 		//if answer is a string, have to put quotes around it
 		if( typeof answer == "string") {
 			answer = '\"' + answer + '\"';
 		}
 		console.log(outputs[i]);
+		console.log(answer);
 		if(!(answer==outputs[i])) {console.log("Constraint "+ i.toString() +" does not work."); return false;}
 	}
 	return true;
 }
 
+//Takes a string of inputs separated by spaces. Splits them and puts commas between. TODO: make this work so strings can have spaces
+function commaInputs(totalInput) {
+	var str = totalInput.split(' ');
+	var inputs="";
+	for(var i = 0; i < str.length; i++) {
+		inputs+=str[i]+', '
+	}
+	return inputs;
+}
 function runQuery(queryString="", queryFilePath='./queries/query.sl') {
 	if(queryString!=="") {
 	fs.writeFileSync(queryFilePath, queryString, "utf8");
@@ -163,10 +173,25 @@ else {
 } */
 
 //Takes a directory name and looks for queryTemplate.sl and constraints.sl. If constraintNumber>-1, it builds a query using just that constraint. templateNum is a string that will be appended to "queryTemplate" and it will use that file as a template for the sygus query
-function buildQuery(inputs, outputs, dirName="./queries", constraintNumber=-1, templateNum="") {
+function buildQuery(inputs, outputs,funcName,logicType,funcType,grammar,endQuery, dirName="./queries", constraintNumber=-1, templateNum="") {
+var constraints = buildConstraints(inputs,outputs,funcName);
+if(constraintNumber < 0) {
+	return logicType+'\n' +funcType +'\n' + grammar + '\n' + constraints + '\n' + endQuery	
+}
+else {
+	constraints = constraints.split("\n");
+	if(constraints.length-1 > constraintNumber) {
+		return logicType+'\n' +funcType +'\n' + grammar + '\n' + constraints[constraintNumber] + '\n' + endQuery	
+		}
+	else {
+		return null;
+	}
+}
+}
+function buildQuery1(inputs, outputs,funcName, dirName="./queries", constraintNumber=-1, templateNum="") {
 var body = fs.readFileSync(dirName + "/queryTemplate"+templateNum+".sl","utf8");
 body = body.split("#PART#\n");
-var constraints = buildConstraints(inputs,outputs);
+var constraints = buildConstraints(inputs,outputs,funcName);
 if(constraintNumber < 0) {
 	return body[0] + constraints + body[1];	
 }
