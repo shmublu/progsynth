@@ -21,7 +21,7 @@ function sygusQuery(inputs, outputs, varNames,funcName,logicType, funcHeader,loo
 	}
 //if it does, let's try running every constraint individually.
 	else {	
-		console.log("Complete Query Unsuccessful. Trying to break it down.\n");
+		console.log("Finding recursive solution...\n");
 		var arrayOfSols = new Array();
 		var categoriesOfSols = new Array();
 		var categoriesOfInputs = new Array();
@@ -88,17 +88,7 @@ function sygusQuery(inputs, outputs, varNames,funcName,logicType, funcHeader,loo
 				break;
 			}
 		}
-		console.log("All queries successful. Checking if solutions are identical.\n");
-		if( sygProc.areSolsIdentical(arrayOfSols)) {
-			console.log("Solutions are identical.\n");
-			var newConstraints= sygProc.getLoopRep(arrayOfSols);
-			//run the query using templace specified by the string, using all the constraints
-			var loopCond = runQuery(buildQuery(inputs,newConstraints,dirName,-1,"2"));
-			loopCond= sygProc.sygusToCode(loopCond);	
-			//all of the solutions are identical except the loopcond, so we pick first one
-			return sygProc.injectLoopCond(loopCond,clonedArray[0]);
-		}
-		console.log("Solutions are not identical. Returning null.\n");
+		console.log("Could not find a recursive solution. Returning null.\n");
 		return null;
 		
 		
